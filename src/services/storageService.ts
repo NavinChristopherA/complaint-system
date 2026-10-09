@@ -1,6 +1,64 @@
+/**
+ * ╔══════════════════════════════════════════════════════════════════════╗
+ * ║  STORAGE SERVICE — LocalStorage CRUD & Ticket Lifecycle Manager    ║
+ * ╠══════════════════════════════════════════════════════════════════════╣
+ * ║                                                                      ║
+ * ║  PURPOSE:                                                            ║
+ * ║  Provides all persistence operations for the Namma Pollachi portal. ║
+ * ║  Acts as the data access layer (DAL), abstracting localStorage      ║
+ * ║  behind type-safe functions with error handling.                     ║
+ * ║                                                                      ║
+ * ║  STORAGE KEY: 'pollachi_civic_tickets_v1'                            ║
+ * ║  Format: JSON stringified array of GrievanceTicket objects           ║
+ * ║                                                                      ║
+ * ║  ┌──────────────────────────────────────────────────────────────────┐ ║
+ * ║  │                   API ENDPOINT REFERENCE                        │ ║
+ * ║  ├──────────────────────┬─────────────────────────────────────────┤ ║
+ * ║  │ Function             │ Description                             │ ║
+ * ║  ├──────────────────────┼─────────────────────────────────────────┤ ║
+ * ║  │ getTickets()         │ READ all tickets (auto-seeds on first   │ ║
+ * ║  │                      │ call, auto-evaluates SLA breaches)      │ ║
+ * ║  │ getTicketById(id)    │ READ single ticket by ID (case-insens.) │ ║
+ * ║  │ createTicket(data)   │ CREATE new ticket with auto-generated   │ ║
+ * ║  │                      │ ID, timeline events, and SLA deadline   │ ║
+ * ║  │ updateTicketStatus() │ UPDATE status with timeline logging     │ ║
+ * ║  │ assignOfficerToTicket│ UPDATE assignment + status to ASSIGNED  │ ║
+ * ║  │ submitCitizenFeedback│ UPDATE ticket with rating & comment     │ ║
+ * ║  │ updateTicket(ticket) │ UPSERT full ticket replacement          │ ║
+ * ║  │ saveTickets(tickets) │ WRITE full ticket array (low-level)     │ ║
+ * ║  │ resetToDemoData()    │ RESET to seed data (INITIAL_TICKETS)    │ ║
+ * ║  └──────────────────────┴─────────────────────────────────────────┘ ║
+ * ║                                                                      ║
+ * ║  TICKET ID FORMAT: POL-{YEAR}-W{WARD}-{SEQUENCE}                    ║
+ * ║  Example: POL-2026-W14-0101                                          ║
+ * ║                                                                      ║
+ * ║  ERROR HANDLING:                                                      ║
+ * ║  All localStorage operations are wrapped in try/catch blocks.        ║
+ * ║  On read failure: returns INITIAL_TICKETS as fallback.               ║
+ * ║  On write failure: logs to console.error (no silent failures).       ║
+ * ║                                                                      ║
+ * ║  UNIT TESTING GUIDANCE:                                               ║
+ * ║  Mock localStorage with a custom class or use jest-localstorage-mock.║
+ * ║  Test cases:                                                          ║
+ * ║  1. getTickets() on empty storage → seeds INITIAL_TICKETS            ║
+ * ║  2. getTickets() with valid JSON → returns parsed array              ║
+ * ║  3. getTickets() with corrupt JSON → returns INITIAL_TICKETS         ║
+ * ║  4. createTicket() → generates correct ID format                     ║
+ * ║  5. createTicket() → sets slaDeadline correctly                      ║
+ * ║  6. updateTicketStatus() → appends timeline event                    ║
+ * ║  7. updateTicketStatus('RESOLVED') → sets resolvedAt                 ║
+ * ║  8. assignOfficerToTicket() → changes status to ASSIGNED             ║
+ * ║  9. submitCitizenFeedback() → attaches feedback object               ║
+ * ║ 10. getTicketById() → case-insensitive match                         ║
+ * ║ 11. resetToDemoData() → restores exact INITIAL_TICKETS               ║
+ * ║                                                                      ║
+ * ╚══════════════════════════════════════════════════════════════════════╝
+ */
+
 import { GrievanceTicket, TicketStatus, OfficerAssignment, CitizenFeedback } from '../types/grievance';
 import { INITIAL_TICKETS } from '../data/initialTickets';
 
+/** LocalStorage key for the main ticket store. Versioned to allow future migrations. */
 const STORAGE_KEY = 'pollachi_civic_tickets_v1';
 
 export function getTickets(): GrievanceTicket[] {

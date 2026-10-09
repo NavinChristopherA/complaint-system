@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/common/Header';
 import { Footer } from './components/common/Footer';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { ToastContainer, ToastMessage } from './components/common/Toast';
 import { EmergencyContactsModal } from './components/common/EmergencyContactsModal';
 import { CitizenHome } from './components/citizen/CitizenHome';
@@ -187,43 +188,53 @@ export function App() {
         {viewMode === 'citizen' ? (
           <>
             {citizenTab === 'home' && (
-              <CitizenHome
-                language={language}
-                onNavigate={(tab) => setCitizenTab(tab)}
-              />
+              <ErrorBoundary fallbackTitle="Citizen Home — Display Error">
+                <CitizenHome
+                  language={language}
+                  onNavigate={(tab) => setCitizenTab(tab)}
+                />
+              </ErrorBoundary>
             )}
 
             {citizenTab === 'wizard' && (
-              <GrievanceWizard
-                language={language}
-                onTicketCreated={handleTicketCreated}
-                onTrackTicket={handleTrackTicket}
-                onShowToast={addToast}
-              />
+              <ErrorBoundary fallbackTitle="Grievance Registration — Processing Error">
+                <GrievanceWizard
+                  language={language}
+                  onTicketCreated={handleTicketCreated}
+                  onTrackTicket={handleTrackTicket}
+                  onShowToast={addToast}
+                />
+              </ErrorBoundary>
             )}
 
             {citizenTab === 'tracker' && (
-              <TicketTracker
-                initialTicketId={trackedTicketId}
-                language={language}
-                onShowToast={addToast}
-              />
+              <ErrorBoundary fallbackTitle="Ticket Tracker — Loading Error">
+                <TicketTracker
+                  initialTicketId={trackedTicketId}
+                  language={language}
+                  onShowToast={addToast}
+                />
+              </ErrorBoundary>
             )}
 
             {citizenTab === 'wards' && (
-              <WardOverview
-                language={language}
-              />
+              <ErrorBoundary fallbackTitle="Ward Overview — Rendering Error">
+                <WardOverview
+                  language={language}
+                />
+              </ErrorBoundary>
             )}
           </>
         ) : (
-          <AdminDashboard
-            tickets={tickets}
-            onTicketsUpdated={(updated) => setTickets(updated)}
-            activePersona={activePersona}
-            language={language}
-            onShowToast={addToast}
-          />
+          <ErrorBoundary fallbackTitle="Admin Command Center — Critical Error">
+            <AdminDashboard
+              tickets={tickets}
+              onTicketsUpdated={(updated) => setTickets(updated)}
+              activePersona={activePersona}
+              language={language}
+              onShowToast={addToast}
+            />
+          </ErrorBoundary>
         )}
       </main>
 

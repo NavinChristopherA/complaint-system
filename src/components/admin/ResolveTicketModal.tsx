@@ -12,6 +12,16 @@ interface ResolveTicketModalProps {
   activePersona: UserPersona;
 }
 
+/**
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  RESOLVE TICKET MODAL — Municipal Field Resolution Interface     ║
+ * ╠══════════════════════════════════════════════════════════════════╣
+ * ║  Enables Junior Engineers and Municipal Staff to close tickets   ║
+ * ║  with verifiable photographic evidence, resolution notes, and    ║
+ * ║  citizen sign-off verification. Updates ticket status to        ║
+ * ║  'RESOLVED' and appends an immutable timeline event.             ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ */
 export const ResolveTicketModal: React.FC<ResolveTicketModalProps> = ({
   ticket,
   isOpen,
@@ -19,8 +29,7 @@ export const ResolveTicketModal: React.FC<ResolveTicketModalProps> = ({
   onResolved,
   activePersona
 }) => {
-  if (!isOpen) return null;
-
+  // Hooks must be unconditional per React Rules of Hooks
   const [remarks, setRemarks] = useState(
     'Field repairs successfully executed. Defect rectified, site cleaned, and restored to standard municipal operating condition.'
   );
@@ -28,6 +37,8 @@ export const ResolveTicketModal: React.FC<ResolveTicketModalProps> = ({
     'https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?auto=format&fit=crop&w=600&q=80'
   );
   const [verifiedWithCitizen, setVerifiedWithCitizen] = useState(true);
+
+  if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

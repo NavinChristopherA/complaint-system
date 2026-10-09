@@ -13,6 +13,16 @@ interface AssignOfficerModalProps {
   activePersona: UserPersona;
 }
 
+/**
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  ASSIGN OFFICER MODAL — AI-Assisted Municipal Dispatch System   ║
+ * ╠══════════════════════════════════════════════════════════════════╣
+ * ║  Recommends appropriate ward engineer or sanitary inspector     ║
+ * ║  based on department taxonomy (engineering vs public health),    ║
+ * ║  generates standard dispatch orders, and updates ticket status   ║
+ * ║  to 'ASSIGNED' with officer assignment audit record.             ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ */
 export const AssignOfficerModal: React.FC<AssignOfficerModalProps> = ({
   ticket,
   isOpen,
@@ -20,22 +30,23 @@ export const AssignOfficerModal: React.FC<AssignOfficerModalProps> = ({
   onAssigned,
   activePersona
 }) => {
-  if (!isOpen) return null;
-
-  const ward = POLLACHI_WARDS.find(w => w.id === ticket.wardId) || POLLACHI_WARDS[0];
+  const ward = (ticket && POLLACHI_WARDS.find(w => w.id === ticket.wardId)) || POLLACHI_WARDS[0];
 
   // Candidates for this department / ward
   const primaryInspector = ward.sanitaryInspector;
   const primaryEngineer = ward.juniorEngineer;
 
   // Decide AI recommended officer based on ticket department
-  const isEngineeringDept = ticket.departmentId === 'dept-water' || ticket.departmentId === 'dept-roads' || ticket.departmentId === 'dept-electrical';
+  const isEngineeringDept = ticket ? (ticket.departmentId === 'dept-water' || ticket.departmentId === 'dept-roads' || ticket.departmentId === 'dept-electrical') : false;
   const recommendedStaff = isEngineeringDept ? primaryEngineer : primaryInspector;
 
+  // Unconditional React hooks per React Rules of Hooks
   const [selectedStaffId, setSelectedStaffId] = useState(recommendedStaff.id);
   const [dispatchRemarks, setDispatchRemarks] = useState(
-    `Deploy maintenance crew to ${ticket.landmark} (${ticket.wardName}) for immediate inspection and redressal.`
+    ticket ? `Deploy maintenance crew to ${ticket.landmark} (${ticket.wardName}) for immediate inspection and redressal.` : ''
   );
+
+  if (!isOpen) return null;
 
   const handleAssignSubmit = (e: React.FormEvent) => {
     e.preventDefault();
